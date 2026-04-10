@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crime.Life Bot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-0: #07111a;
+      --bg-1: #0b1823;
+      --bg-2: #112435;
+      --panel: rgba(12, 23, 34, 0.82);
+      --panel-strong: rgba(10, 19, 28, 0.96);
+      --line: rgba(126, 169, 205, 0.16);
+      --line-strong: rgba(126, 169, 205, 0.26);
+      --text: #ebf5ff;
+      --muted: #88a0b2;
+      --muted-strong: #a7c0d4;
+      --accent: #ff8752;
+      --accent-soft: rgba(255, 135, 82, 0.18);
+      --accent-glow: rgba(255, 135, 82, 0.35);
+      --good: #5bd08f;
+      --good-soft: rgba(91, 208, 143, 0.18);
+      --danger: #ff6674;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+      --mono: "Cascadia Mono", "Consolas", "Courier New", monospace;
+      --ui: "Segoe UI Variable Display", "Bahnschrift", "Segoe UI", sans-serif;
+    }
+
+    body {
+      width: 360px;
+      background:
+        radial-gradient(circle at top left, rgba(126, 215, 255, 0.16), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(255, 135, 82, 0.22), transparent 34%),
+        linear-gradient(160deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+      color: var(--text);
+      font-family: var(--ui);
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      border-radius: 999px;
+      pointer-events: none;
+      filter: blur(8px);
+      opacity: 0.6;
+    }
+
+    body::before {
+      width: 170px;
+      height: 170px;
+      top: -38px;
+      right: -42px;
+      background: rgba(126, 215, 255, 0.16);
+    }
+
+    body::after {
+      width: 200px;
+      height: 200px;
+      bottom: -96px;
+      left: -56px;
+      background: rgba(255, 135, 82, 0.16);
+    }
+
+    body[data-active="true"] {
+      background:
+        radial-gradient(circle at top left, rgba(91, 208, 143, 0.16), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(255, 200, 102, 0.22), transparent 34%),
+        linear-gradient(160deg, #07130f, #0c1b1f 45%, #11282d);
+    }
+
+    .app-shell {
+      position: relative;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .panel,
+    .hero {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero::before,
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 35%, rgba(255, 255, 255, 0.02));
+      pointer-events: none;
+    }
+
+    .hero-top,
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 17px;
+      font-weight: 700;
+      color: #10151d;
+      background:
+        linear-gradient(135deg, #ffe0ab, #ff8752 62%, #ff6a4e);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.38),
+        0 16px 28px rgba(255, 135, 82, 0.26);
+    }
+
+    .eyebrow {
+      margin-bottom: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.24em;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .brand h1,
+    .panel-heading h2 {
+      font-size: 22px;
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-heading h2 {
+      font-size: 17px;
+    }
+
+    .version-pill,
+    .mode-chip {
+      padding: 8px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted-strong);
+      background: rgba(255, 255, 255, 0.04);
+      white-space: nowrap;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      color: var(--muted-strong);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .hero-status {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 12px;
+    }
+
+    .status-card,
+    .cycle-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .status-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-copy {
+      display: grid;
+      gap: 2px;
+    }
+
+    .status-label,
+    .cycle-label,
+    .stat-label,
+    .setting-desc {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .status-text,
+    .cycle-info {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .status-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.04);
+      transition: 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .status-dot.on {
+      background: var(--good);
+      box-shadow:
+        0 0 0 6px rgba(91, 208, 143, 0.12),
+        0 0 18px rgba(91, 208, 143, 0.48);
+      animation: pulse 1.8s infinite;
+    }
+
+    .panel {
+      padding: 14px;
+    }
+
+    .toggle-panel {
+      display: grid;
+      gap: 12px;
+    }
+
+    #main-toggle {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(10, 19, 28, 0.96));
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.24s ease;
+      overflow: hidden;
+    }
+
+    #main-toggle:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+    }
+
+    #main-toggle:active {
+      transform: translateY(1px);
+    }
+
+    #main-toggle.off {
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    #main-toggle.on {
+      border-color: rgba(91, 208, 143, 0.34);
+      background: linear-gradient(135deg, rgba(91, 208, 143, 0.12), rgba(10, 19, 28, 0.98) 42%, rgba(255, 198, 107, 0.09));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 18px 34px rgba(91, 208, 143, 0.12);
+    }
+
+    #main-toggle::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: linear-gradient(120deg, transparent 10%, rgba(255, 255, 255, 0.08) 32%, transparent 58%);
+      transform: translateX(-120%);
+      transition: transform 0.75s ease;
+    }
+
+    #main-toggle:hover::before {
+      transform: translateX(120%);
+    }
+
+    .led-shell {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .led {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: 0.3s ease;
+    }
+
+    .led.on {
+      background: var(--good);
+      box-shadow:
+        0 0 16px rgba(91, 208, 143, 0.72),
+        0 0 28px rgba(91, 208, 143, 0.35);
+      animation: pulse 1.8s infinite;
+    }
+
+    .toggle-copy {
+      display: grid;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    #toggle-label {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    #toggle-helper {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .toggle-arrow {
+      font-size: 24px;
+      color: var(--accent);
+      line-height: 1;
+      transform: translateX(0);
+      transition: transform 0.18s ease;
+    }
+
+    #main-toggle:hover .toggle-arrow {
+      transform: translateX(2px);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .stat-card {
+      position: relative;
+      padding: 12px 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -20px -30px auto;
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 135, 82, 0.18), transparent 70%);
+    }
+
+    .stat-value {
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff4e7;
+      position: relative;
+      z-index: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #p-uptime {
+      font-size: 15px;
+      letter-spacing: -0.04em;
+    }
+
+    .settings-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .setting-card,
+    .select-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .setting-card {
+      cursor: pointer;
+    }
+
+    .setting-copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .setting-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .switch {
+      position: relative;
+      width: 56px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: 0.22s ease;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #f5fbff;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.24);
+      transition: 0.22s ease;
+    }
+
+    .switch input:checked + .slider {
+      background: linear-gradient(135deg, var(--accent), #ffc66b);
+      border-color: transparent;
+      box-shadow: 0 12px 20px rgba(255, 135, 82, 0.22);
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(24px);
+      background: #161d22;
+    }
+
+    .select-card {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .select-wrap {
+      width: 100%;
+      position: relative;
+    }
+
+    .select-wrap::after {
+      content: "v";
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .select-wrap select {
+      width: 100%;
+      padding: 12px 38px 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel-strong);
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--ui);
+      appearance: none;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .select-wrap select:focus {
+      border-color: rgba(255, 135, 82, 0.42);
+      box-shadow: 0 0 0 3px rgba(255, 135, 82, 0.12);
+    }
+
+    .ghost-btn {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted-strong);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .ghost-btn:hover {
+      border-color: rgba(255, 135, 82, 0.26);
+      color: #fff1e4;
+      background: rgba(255, 135, 82, 0.1);
+    }
+
+    .ghost-btn[disabled] {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .panel-copy {
+      position: relative;
+      z-index: 1;
+      color: var(--muted-strong);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .qa-actions {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 12px;
+    }
+
+    .qa-actions .ghost-btn {
+      width: 100%;
+    }
+
+    .qa-metrics {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .qa-metric {
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .qa-metric-label {
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .qa-metric-value {
+      display: block;
+      margin-top: 6px;
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff4e7;
+    }
+
+    .qa-status {
+      position: relative;
+      z-index: 1;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: var(--muted-strong);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .qa-report {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 4px;
+      margin-top: 12px;
+    }
+
+    .qa-report-title {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .qa-report-summary {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .qa-list {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      list-style: none;
+    }
+
+    .qa-item {
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      display: grid;
+      gap: 6px;
+    }
+
+    .qa-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .qa-item-title {
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .qa-item-detail {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .qa-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .qa-badge.error {
+      background: rgba(255, 102, 116, 0.16);
+      color: #ffd8de;
+    }
+
+    .qa-badge.warning {
+      background: rgba(255, 135, 82, 0.16);
+      color: #ffe6d9;
+    }
+
+    .qa-badge.info {
+      background: rgba(126, 215, 255, 0.14);
+      color: #d8f2ff;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.08);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero-top">
+        <div class="brand">
+          <div>
+            <h1>CrimeBot Menu</h1>
+          </div>
+        </div>
+        <div class="version-pill">v1.0.0</div>
+      </div>
+
+      <div class="hero-status">
+        <div class="status-card">
+          <div class="status-dot" id="status-dot"></div>
+          <div class="status-copy">
+            <div class="status-label">Status geral</div>
+            <div class="status-text" id="status-text">INATIVO</div>
+          </div>
+        </div>
+
+        <div class="cycle-card">
+          <div class="cycle-label">Ciclo atual</div>
+          <div class="cycle-info" id="cycle-info">--</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel toggle-panel">
+      <div class="panel-heading">
+        <div>
+          <div class="eyebrow">funcoes bot</div>
+        </div>
+      </div>
+
+      <button id="main-toggle" class="off" type="button">
+        <span class="led-shell">
+          <span class="led" id="main-led"></span>
+        </span>
+        <span class="toggle-copy">
+          <span id="toggle-label">LIGAR BOT</span>
+          <span id="toggle-helper">Pronto para iniciar a automacao</span>
+        </span>
+        <span class="toggle-arrow">&rsaquo;</span>
+      </button>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Crimes executados</div>
+          <div class="stat-value" id="p-crimes">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ganhos totais</div>
+          <div class="stat-value" id="p-money">$0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Horario do jogo</div>
+          <div class="stat-value" id="p-uptime">--:--:--</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <div class="eyebrow">ajustes</div>
+          <h2>Configuracoes</h2>
+        </div>
+      </div>
+
+      <div class="settings-list">
+        <label class="setting-card" for="p-autocrime">
+          <span class="setting-copy">
+            <span class="setting-title">Auto Crime</span>
+            <span class="setting-desc">Executa crimes automaticamente.</span>
+          </span>
+          <span class="switch">
+            <input type="checkbox" id="p-autocrime">
+            <span class="slider"></span>
+          </span>
+        </label>
+
+        <label class="setting-card" for="p-autoenergy">
+          <span class="setting-copy">
+            <span class="setting-title">Auto Energy</span>
+            <span class="setting-desc">Recupera energia em Clubes com Jorge quando a energia atual cair para 14 ou menos.</span>
+          </span>
+          <span class="switch">
+            <input type="checkbox" id="p-autoenergy">
+            <span class="slider"></span>
+          </span>
+        </label>
+
+        <div class="select-card">
+          <span class="setting-copy">
+            <span class="setting-title">Modo de operacao</span>
+            <span class="setting-desc">Escolha qual crime o bot deve procurar.</span>
+          </span>
+          <div class="select-wrap">
+            <select id="p-crimemode">
+              <option value="safe">Roubar Doces de uma Crianca</option>
+              <option value="clothesline">Roubar Roupa do Estendal</option>
+              <option value="pickpocket">Carteirista</option>
+              <option value="tourist">Assaltar um Turista</option>
+              <option value="basiccar">Invadir um Carro Basico</option>
+              <option value="convenience">Furtar numa Loja de Conveniencia</option>
+              <option value="mermaid">O Olho da Sereia</option>
+              <option value="narcos">Laboratorio Narcos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <div class="eyebrow">qa interno</div>
+          <h2>Auditoria Segura</h2>
+        </div>
+        <div class="mode-chip">safe scan</div>
+      </div>
+
+      <div class="qa-actions">
+        <p class="panel-copy">Monitora erros do front e testa inputs da tela atual sem enviar formularios nem disparar acoes destrutivas.</p>
+        <button class="ghost-btn" id="run-qa-audit" type="button">Rodar auditoria na pagina</button>
+      </div>
+
+      <div class="qa-metrics">
+        <div class="qa-metric">
+          <span class="qa-metric-label">Erros</span>
+          <span class="qa-metric-value" id="qa-errors">0</span>
+        </div>
+        <div class="qa-metric">
+          <span class="qa-metric-label">Warnings</span>
+          <span class="qa-metric-value" id="qa-warnings">0</span>
+        </div>
+        <div class="qa-metric">
+          <span class="qa-metric-label">Inputs</span>
+          <span class="qa-metric-value" id="qa-inputs">0</span>
+        </div>
+        <div class="qa-metric">
+          <span class="qa-metric-label">Achados</span>
+          <span class="qa-metric-value" id="qa-issues-total">0</span>
+        </div>
+      </div>
+
+      <div class="qa-status" id="qa-status">Abra o crime.life e rode a auditoria segura na tela que voce quer validar.</div>
+
+      <div class="qa-report">
+        <div class="qa-report-title" id="qa-last-page">Nenhuma auditoria executada</div>
+        <div class="qa-report-summary" id="qa-last-summary">A extensao guarda erros recentes da pagina e mostra um resumo do ultimo scan.</div>
+      </div>
+
+      <div class="log-header">ultimos achados</div>
+      <ul class="qa-list" id="qa-issues"></ul>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Crime.Life Bot",
+  "version": "1.1.0",
+  "description": "Bot e ferramenta de QA para Crime.Life, com automacao, monitoramento de erros e testes seguros de inputs.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://crime.life/*",
+    "https://www.crime.life/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://crime.life/*", "https://www.crime.life/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
